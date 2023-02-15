@@ -13,7 +13,7 @@ data class Test(
 fun Application.configureRouting() {
     routing {
         get("/") {
-            call.respond(Test("PPPP"))
+            call.respondText("OK!")
         }
     }
 }

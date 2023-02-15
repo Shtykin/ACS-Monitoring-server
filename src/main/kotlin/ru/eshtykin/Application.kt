@@ -3,6 +3,8 @@ package ru.eshtykin
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.cio.*
+import ru.eshtykin.features.login.configureLoginRouting
+import ru.eshtykin.features.registration.configureRegistrationRouting
 import ru.eshtykin.plugins.*
 
 fun main() {
@@ -13,4 +15,6 @@ fun main() {
 fun Application.module() {
     configureRouting()
     configureSerialization()
+    configureLoginRouting()
+    configureRegistrationRouting()
 }
