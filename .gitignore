@@ -34,3 +34,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Privates ###
+src/main/kotlin/ru/eshtykin/private
