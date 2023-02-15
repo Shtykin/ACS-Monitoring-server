@@ -1,0 +1,1 @@
+rootProject.name = "ru.eshtykin.acs-monitoring-server"
