@@ -1,9 +1,7 @@
 package ru.eshtykin.database.registers
 
-import ru.eshtykin.database.registers.Registers.nullable
-
 data class RegisterDTO(
-    val adress: Int,
+    val address: Int,
     val name: String?,
     val value: String?,
     val unit: String?,

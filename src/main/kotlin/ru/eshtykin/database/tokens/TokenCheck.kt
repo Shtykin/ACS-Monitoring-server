@@ -4,6 +4,7 @@ import ru.eshtykin.private.Constants
 
 object TokenCheck {
 
-    fun isTokenValid(token: String): Boolean = Tokens.fetchTokens()?.firstOrNull{ it.token == token} != null
+//    fun isTokenValid(token: String): Boolean = Tokens.fetchTokens()?.firstOrNull{ it.token == token} != null
+    fun isTokenValid(token: String): Boolean = Tokens.fetch(token) != null
     fun isTokenAdmin(token: String?): Boolean = token == Constants.adminToken
 }

@@ -13,16 +13,21 @@ fun Application.configureRegisterRouting() {
             val registerController = RegisterController(call)
             registerController.readRegistersByExplorer()
         }
-
-
-
-//        post("/registers/add") {
-//            val registerController = RegisterController(call)
-//            registerController.setRegister()
-//        }
-//        post("/registers/fetch") {
-//            val registerController = RegisterController(call)
-//            registerController.getRegister()
-//        }
+        post("/explorer/register/set") {
+            val registerController = RegisterController(call)
+            registerController.setRegisterByExplorer()
+        }
+        post("/explorer/registers/set") {
+            val registerController = RegisterController(call)
+            registerController.setRegistersByExplorer()
+        }
+        post("/device/register/set") {
+            val registerController = RegisterController(call)
+            registerController.setRegisterByDevice()
+        }
+        post("/device/registers/set") {
+            val registerController = RegisterController(call)
+            registerController.setRegistersByDevice()
+        }
     }
 }

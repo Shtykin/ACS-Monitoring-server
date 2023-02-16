@@ -27,7 +27,7 @@ class RoleController(private val call: ApplicationCall) {
         if (Users.update(newUser)) {
             call.respond(RoleResponseRemote(login = newUser.login, role = newUser.role ?: ""))
         } else {
-            call.respond(HttpStatusCode.ExpectationFailed, "Failed to change role")
+            call.respond(HttpStatusCode.Conflict, "Failed to change role")
         }
     }
 }

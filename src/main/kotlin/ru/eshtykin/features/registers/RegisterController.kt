@@ -7,28 +7,22 @@ import io.ktor.server.response.*
 import ru.eshtykin.database.registers.RegisterDTO
 import ru.eshtykin.database.registers.Registers
 import ru.eshtykin.database.tokens.TokenCheck
-import ru.eshtykin.database.tokens.TokenDTO
 import ru.eshtykin.database.tokens.Tokens
-import ru.eshtykin.database.users.UserDTO
-import ru.eshtykin.database.users.Users
-import ru.eshtykin.features.login.LoginReceiveRemote
-import ru.eshtykin.features.login.LoginResponseRemote
-import ru.eshtykin.utils.isValidEmail
-import java.util.*
+import ru.eshtykin.database.users.RoleCheck
+import ru.eshtykin.private.Constants
 
 class RegisterController(private val call: ApplicationCall) {
 
     suspend fun readRegisterByExplorer() {
-        val token = call.request.headers["Baerer-Autorization"]
-        if (!TokenCheck.isTokenValid(token.orEmpty())) {
-            call.respond(HttpStatusCode.Unauthorized, "Invalid token")
-            return
-        }
-        val registerReceiveRemote = call.receive<RegisterByExplorerReceiveRemote>()
+        if (!checkUser(Constants.roleExplorer)) return
+
+        val registerReceiveRemote = call.receive<ReadRegisterByExplorerReceiveRemote>()
 
         val register = Registers
-            .fetchForOwner(registerOwner = registerReceiveRemote.owner)
-            ?.filter { it.adress == registerReceiveRemote.adress }?.first()
+            .fetchForOwnerAndAddress(
+                registerOwner = registerReceiveRemote.owner,
+                registerAdress = registerReceiveRemote.address
+            )
 
         if (register == null) {
             call.respond(HttpStatusCode.BadRequest, "Register not found")
@@ -38,12 +32,9 @@ class RegisterController(private val call: ApplicationCall) {
     }
 
     suspend fun readRegistersByExplorer() {
-        val token = call.request.headers["Baerer-Autorization"]
-        if (!TokenCheck.isTokenValid(token.orEmpty())) {
-            call.respond(HttpStatusCode.Unauthorized, "Invalid token")
-            return
-        }
-        val registersReceiveRemote = call.receive<RegistersByExplorerReceiveRemote>()
+        if (!checkUser(Constants.roleExplorer)) return
+
+        val registersReceiveRemote = call.receive<ReadRegistersByExplorerReceiveRemote>()
 
         val registers = Registers
             .fetchForOwner(registerOwner = registersReceiveRemote.owner)
@@ -55,56 +46,146 @@ class RegisterController(private val call: ApplicationCall) {
         call.respond(registers.map { it.mapToRegisterResponseRemote() })
     }
 
+    suspend fun setRegisterByExplorer() {
+        if (!checkUser(Constants.roleExplorer)) return
+        val registerReceiveRemote = call.receive<SetRegisterByExplorerReceiveRemote>()
 
-//    suspend fun setRegister() {
-//        val registerReceiveRemote = call.receive<RegisterReceiveRemote>()
-//        val token = call.request.headers["Baerer-Autorization"]
-//        if (!TokenCheck.isTokenValid(token.orEmpty())) {
-//            call.respond(HttpStatusCode.Unauthorized, "Invalid token")
-//        } else {
-//            val oldRegisterDTO = Registers.fetchForAdress(registerReceiveRemote.adress)
-//            val newRegisterDTO = RegisterDTO(
-//                adress = registerReceiveRemote.adress,
-//                name = registerReceiveRemote.name,
-//                value = registerReceiveRemote.value,
-//                unit = registerReceiveRemote.unit,
-//                timestamp = registerReceiveRemote.timestamp ?: System.currentTimeMillis(),
-//                owner = registerReceiveRemote.owner
-//            )
-//            if (oldRegisterDTO == null) {
-//                Registers.insert(newRegisterDTO)
-//                call.respond(HttpStatusCode.Created, "Register created")
-//            } else {
-//                Registers.update(newRegisterDTO)
-//                call.respond(HttpStatusCode.OK, "Register updated")
-//            }
-//        }
-//    }
-//
-//    suspend fun getRegister() {
-//        val registerReceiveRemote = call.receive<RegisterReceiveRemote>()
-//        val token = call.request.headers["Baerer-Autorization"]
-//
-//        if (!TokenCheck.isTokenValid(token.orEmpty())) {
-//            call.respond(HttpStatusCode.Unauthorized, "Token not found")
-//        } else {
-//            val RegisterDTO = Registers.fetchForAdress(registerReceiveRemote.adress)
-//            if (RegisterDTO == null) {
-//                call.respond(HttpStatusCode.NotFound, "Register not found")
-//            } else {
-//                call.respond(
-//                    RegisterResponseRemote(
-//                        adress = RegisterDTO.adress,
-//                        name = RegisterDTO.name,
-//                        value = RegisterDTO.value,
-//                        unit = RegisterDTO.unit,
-//                        timestamp = RegisterDTO.timestamp,
-//                        owner = RegisterDTO.owner
-//                    )
-//                )
-//            }
-//        }
-//
-//
-//    }
+        val register = Registers
+            .fetchForOwnerAndAddress(
+                registerOwner = registerReceiveRemote.owner,
+                registerAdress = registerReceiveRemote.address
+            )
+
+        val registerDTO = RegisterDTO(
+            address = registerReceiveRemote.address,
+            name = registerReceiveRemote.name,
+            value = null,
+            unit = registerReceiveRemote.unit,
+            timestamp = null,
+            owner = registerReceiveRemote.owner
+        )
+        if (register == null) Registers.insert(registerDTO)
+        else Registers.updateSettings(registerDTO)
+
+        val newRegisterDTO = Registers.fetchForOwnerAndAddress(
+            registerOwner = registerReceiveRemote.owner,
+            registerAdress = registerReceiveRemote.address
+        )
+        if (newRegisterDTO == null) call.respond(HttpStatusCode.Conflict, "Failed to set settings")
+        else call.respond(newRegisterDTO.mapToRegisterResponseRemote())
+    }
+
+    suspend fun setRegistersByExplorer() {
+        if (!checkUser(Constants.roleExplorer)) return
+        val registersReceiveRemote = call.receive<SetRegistersByExplorerReceiveRemote>()
+
+        val requestList = mutableListOf<RegisterResponseRemote>()
+        registersReceiveRemote.registers.forEach {registerReceiveRemote ->
+            val register = Registers
+                .fetchForOwnerAndAddress(
+                    registerOwner = registerReceiveRemote.owner,
+                    registerAdress = registerReceiveRemote.address
+                )
+            val registerDTO = RegisterDTO(
+                address = registerReceiveRemote.address,
+                name = registerReceiveRemote.name,
+                value = null,
+                unit = registerReceiveRemote.unit,
+                timestamp = null,
+                owner = registerReceiveRemote.owner
+            )
+            if (register == null) Registers.insert(registerDTO)
+            else Registers.updateSettings(registerDTO)
+
+            val newRegisterDTO = Registers.fetchForOwnerAndAddress(
+                registerOwner = registerReceiveRemote.owner,
+                registerAdress = registerReceiveRemote.address
+            )
+            newRegisterDTO?.let { requestList.add(it.mapToRegisterResponseRemote()) }
+
+        }
+        if (requestList.isEmpty()) call.respond(HttpStatusCode.Conflict, "Failed to set settings")
+        else call.respond(requestList)
+    }
+
+    suspend fun setRegisterByDevice() {
+        if (!checkUser(Constants.roleDevice)) return
+        val registerReceiveRemote = call.receive<SetRegisterByDeviceReceiveRemote>()
+
+        val register = Registers
+            .fetchForOwnerAndAddress(
+                registerOwner = registerReceiveRemote.owner,
+                registerAdress = registerReceiveRemote.address
+            )
+
+        val registerDTO = RegisterDTO(
+            address = registerReceiveRemote.address,
+            name = null,
+            value = registerReceiveRemote.value,
+            unit = null,
+            timestamp = null,
+            owner = registerReceiveRemote.owner
+        )
+
+        if (register == null) Registers.insert(registerDTO)
+        else Registers.updateValue(registerDTO)
+
+        val newRegisterDTO = Registers.fetchForOwnerAndAddress(
+            registerOwner = registerReceiveRemote.owner,
+            registerAdress = registerReceiveRemote.address
+        )
+        if (newRegisterDTO == null) call.respond(HttpStatusCode.Conflict, "Failed to set value")
+        else call.respond(newRegisterDTO.mapToRegisterResponseRemote())
+    }
+
+    suspend fun setRegistersByDevice() {
+        if (!checkUser(Constants.roleDevice)) return
+        val registersReceiveRemote = call.receive<SetRegistersByDeviceReceiveRemote>()
+
+        val requestList = mutableListOf<RegisterResponseRemote>()
+        registersReceiveRemote.registers.forEach {registerReceiveRemote ->
+            val register = Registers
+                .fetchForOwnerAndAddress(
+                    registerOwner = registerReceiveRemote.owner,
+                    registerAdress = registerReceiveRemote.address
+                )
+            val registerDTO = RegisterDTO(
+                address = registerReceiveRemote.address,
+                name = null,
+                value = registerReceiveRemote.value,
+                unit = null,
+                timestamp = null,
+                owner = registerReceiveRemote.owner
+            )
+            if (register == null) Registers.insert(registerDTO)
+            else Registers.updateValue(registerDTO)
+
+            val newRegisterDTO = Registers.fetchForOwnerAndAddress(
+                registerOwner = registerReceiveRemote.owner,
+                registerAdress = registerReceiveRemote.address
+            )
+            newRegisterDTO?.let { requestList.add(it.mapToRegisterResponseRemote()) }
+
+        }
+        if (requestList.isEmpty()) call.respond(HttpStatusCode.Conflict, "Failed to set values")
+        else call.respond(requestList)
+    }
+
+    private suspend fun checkUser(role: String): Boolean {
+        val token = call.request.headers["Baerer-Autorization"]
+        if (!TokenCheck.isTokenValid(token.orEmpty()) || token == null) {
+            call.respond(HttpStatusCode.Unauthorized, "Invalid token")
+            return false
+        }
+        val login = Tokens.fetch(token)?.login
+        if (login == null) {
+            call.respond(HttpStatusCode.BadRequest, "User not found")
+            return false
+        }
+        if (RoleCheck.getRole(login) != role) {
+            call.respond(HttpStatusCode.BadRequest, "Wrong role")
+            return false
+        }
+        return true
+    }
 }

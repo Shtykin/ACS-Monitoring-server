@@ -2,11 +2,10 @@ package ru.eshtykin.features.registers
 
 import kotlinx.serialization.Serializable
 import ru.eshtykin.database.registers.RegisterDTO
-import ru.eshtykin.database.registers.Registers
 
 @Serializable
 data class RegisterReceiveRemote (
-    val adress: Int,
+    val address: Int,
     val name: String?,
     val value: String?,
     val unit: String?,
@@ -16,7 +15,7 @@ data class RegisterReceiveRemote (
 
 @Serializable
 data class RegisterResponseRemote (
-    val adress: Int,
+    val address: Int,
     val name: String?,
     val value: String?,
     val unit: String?,
@@ -25,14 +24,39 @@ data class RegisterResponseRemote (
 )
 
 @Serializable
-data class RegisterByExplorerReceiveRemote (
-    val adress: Int,
+data class ReadRegisterByExplorerReceiveRemote (
+    val address: Int,
     val owner: String?
 )
 
 @Serializable
-data class RegistersByExplorerReceiveRemote (
+data class ReadRegistersByExplorerReceiveRemote (
     val owner: String?
+)
+
+@Serializable
+data class SetRegisterByExplorerReceiveRemote (
+    val address: Int,
+    val name: String?,
+    val unit: String?,
+    val owner: String?
+)
+
+@Serializable
+data class SetRegisterByDeviceReceiveRemote (
+    val address: Int,
+    val value: String?,
+    val owner: String?
+)
+
+@Serializable
+data class SetRegistersByExplorerReceiveRemote (
+    val registers: List<SetRegisterByExplorerReceiveRemote>
+)
+
+@Serializable
+data class SetRegistersByDeviceReceiveRemote (
+    val registers: List<SetRegisterByDeviceReceiveRemote>
 )
 
 @Serializable
@@ -42,7 +66,7 @@ data class FetchRegisterRequest (
 
 fun RegisterDTO.mapToRegisterResponseRemote(): RegisterResponseRemote{
     return RegisterResponseRemote(
-        adress = this.adress,
+        address = this.address,
         name = this.name,
         value = this.value,
         unit = this.unit,

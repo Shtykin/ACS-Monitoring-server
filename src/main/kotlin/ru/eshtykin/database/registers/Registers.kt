@@ -1,13 +1,11 @@
 package ru.eshtykin.database.registers
 
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.Table.Dual.nullable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
-import ru.eshtykin.database.users.UserDTO
-import ru.eshtykin.database.users.Users
 
 object Registers : Table("registers") {
-    private val adress = Registers.integer("adress")
+    private val address = Registers.integer("adress")
     private val name = Registers.varchar("name", 100).nullable()
     private val value = Registers.varchar("value", 25).nullable()
     private val unit = Registers.varchar("unit", 25).nullable()
@@ -17,7 +15,7 @@ object Registers : Table("registers") {
     fun insert(registerDTO: RegisterDTO) {
         transaction {
             Registers.insert {
-                it[adress] = registerDTO.adress
+                it[address] = registerDTO.address
                 it[name] = registerDTO.name
                 it[value] = registerDTO.value
                 it[unit] = registerDTO.unit
@@ -27,14 +25,18 @@ object Registers : Table("registers") {
         }
     }
 
-    fun update(registerDTO: RegisterDTO) {
+    fun updateSettings(registerDTO: RegisterDTO) {
         transaction {
-            Registers.update({ Registers.adress eq registerDTO.adress }) {
+            Registers.update( {address.eq(registerDTO.address) and owner.eq(registerDTO.owner)} ) {
                 it[name] = registerDTO.name
-                it[value] = registerDTO.value
                 it[unit] = registerDTO.unit
-                it[timestamp] = registerDTO.timestamp
-                it[owner] = registerDTO.owner
+            }
+        }
+    }
+    fun updateValue(registerDTO: RegisterDTO) {
+        transaction {
+            Registers.update( {address.eq(registerDTO.address) and owner.eq(registerDTO.owner)} ) {
+                it[value] = registerDTO.value
             }
         }
     }
@@ -42,9 +44,9 @@ object Registers : Table("registers") {
     fun fetchForAdress(registerAdress: Int): RegisterDTO? {
         return try {
             transaction {
-                val registerModel = Registers.select { adress.eq(registerAdress) }.first()
+                val registerModel = Registers.select { address.eq(registerAdress) }.first()
                 RegisterDTO(
-                    adress = registerModel[adress],
+                    address = registerModel[address],
                     name = registerModel[name],
                     value = registerModel[value],
                     unit = registerModel[unit],
@@ -63,7 +65,7 @@ object Registers : Table("registers") {
                 Registers.select { owner.eq(registerOwner) }.toList()
                     .map {
                         RegisterDTO(
-                            adress = it[adress],
+                            address = it[address],
                             name = it[name],
                             value = it[value],
                             unit = it[unit],
@@ -77,13 +79,33 @@ object Registers : Table("registers") {
         }
     }
 
+    fun fetchForOwnerAndAddress(registerOwner: String?, registerAdress: Int): RegisterDTO? {
+        return try {
+            transaction {
+                val registerModel = Registers
+                    .select { address.eq(registerAdress) and owner.eq(registerOwner) }
+                    .first()
+                RegisterDTO(
+                    address = registerModel[address],
+                    name = registerModel[name],
+                    value = registerModel[value],
+                    unit = registerModel[unit],
+                    timestamp = registerModel[timestamp],
+                    owner = registerModel[owner]
+                )
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     fun fetchAll(): List<RegisterDTO>? {
         return try {
             transaction {
                 Registers.selectAll().toList()
                     .map {
                         RegisterDTO(
-                            adress = it[adress],
+                            address = it[address],
                             name = it[name],
                             value = it[value],
                             unit = it[unit],
