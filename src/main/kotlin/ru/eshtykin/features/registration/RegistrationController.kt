@@ -27,7 +27,8 @@ class RegistrationController(private val call: ApplicationCall) {
                         UserDTO(
                             login = registrationReceiveRemote.login,
                             password = registrationReceiveRemote.password,
-                            email = registrationReceiveRemote.email
+                            email = registrationReceiveRemote.email,
+                            role = null
                         )
                     )
                 Tokens.insert(

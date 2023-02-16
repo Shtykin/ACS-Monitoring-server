@@ -1,12 +1,16 @@
 package ru.eshtykin
 
 import io.ktor.server.application.*
-import io.ktor.server.engine.*
 import io.ktor.server.cio.*
+import io.ktor.server.engine.*
 import org.jetbrains.exposed.sql.Database
 import ru.eshtykin.features.login.configureLoginRouting
+import ru.eshtykin.features.registers.configureRegisterRouting
 import ru.eshtykin.features.registration.configureRegistrationRouting
-import ru.eshtykin.plugins.*
+import ru.eshtykin.features.role.configureRoleRouting
+import ru.eshtykin.features.users.configureUsersRouting
+import ru.eshtykin.plugins.configureRouting
+import ru.eshtykin.plugins.configureSerialization
 import ru.eshtykin.private.Constants
 
 fun main() {
@@ -26,4 +30,7 @@ fun Application.module() {
     configureSerialization()
     configureLoginRouting()
     configureRegistrationRouting()
+    configureRegisterRouting()
+    configureRoleRouting()
+    configureUsersRouting()
 }
