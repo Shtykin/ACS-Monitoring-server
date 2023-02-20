@@ -50,13 +50,26 @@ data class SetRegisterByDeviceReceiveRemote (
 )
 
 @Serializable
-data class SetRegistersByExplorerReceiveRemote (
-    val registers: List<SetRegisterByExplorerReceiveRemote>
+data class RegisterByExplorerReceiveRemote (
+    val address: Int,
+    val name: String?,
+    val unit: String?,
+)
+@Serializable
+data class SetExplorerByDeviceReceiveRemote (
+    val registers: List<RegisterByExplorerReceiveRemote>,
+    val owner: String?
 )
 
 @Serializable
+data class RegisterByDeviceReceiveRemote (
+    val address: Int,
+    val value: String?
+)
+@Serializable
 data class SetRegistersByDeviceReceiveRemote (
-    val registers: List<SetRegisterByDeviceReceiveRemote>
+    val registers: List<RegisterByDeviceReceiveRemote>,
+    val owner: String?
 )
 
 @Serializable

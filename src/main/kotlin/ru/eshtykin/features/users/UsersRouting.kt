@@ -18,5 +18,10 @@ fun Application.configureUsersRouting() {
             val usersController = UsersController(call)
             usersController.getUsers()
         }
+        post("/admin/owner") {
+            val usersController = UsersController(call)
+            usersController.setOwner()
+        }
+
     }
 }

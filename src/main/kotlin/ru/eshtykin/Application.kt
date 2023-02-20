@@ -11,13 +11,13 @@ import ru.eshtykin.features.role.configureRoleRouting
 import ru.eshtykin.features.users.configureUsersRouting
 import ru.eshtykin.plugins.configureRouting
 import ru.eshtykin.plugins.configureSerialization
-import ru.eshtykin.private.Constants
+import ru.eshtykin.constatns.private.Constants
 
 fun main() {
     Database.connect(
-        url = "jdbc:postgresql://localhost:5432/acs_monitoring",
+        url = ru.eshtykin.constatns.publ.Constants.baseUrl,
         driver = "org.postgresql.Driver",
-        user =  Constants.userDb,
+        user =  ru.eshtykin.constatns.publ.Constants.userDb,
         password = Constants.passwordDb
     )
 //    println("db: ${db.version}")

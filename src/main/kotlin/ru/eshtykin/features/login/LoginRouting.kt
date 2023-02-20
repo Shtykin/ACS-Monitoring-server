@@ -9,5 +9,9 @@ fun Application.configureLoginRouting() {
             val loginController = LoginController(call)
             loginController.performLogin()
         }
+        post("/admin/login") {
+            val loginController = LoginController(call)
+            loginController.performAdminLogin()
+        }
     }
 }

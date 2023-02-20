@@ -36,4 +36,4 @@ out/
 .vscode/
 
 ### Privates ###
-src/main/kotlin/ru/eshtykin/private
+src/main/kotlin/ru/eshtykin/constatns/private
